@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
                     '127.0.0.1'
 
     // Insert or update email subscriber (using public client for now)
-    let { data: subscriber, error: subscriberError } = await supabase
+    const { data: subscriberData, error: subscriberError } = await supabase
       .from('email_subscribers')
       .upsert({
         email: body.email,
@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
       })
       .select('id')
       .single()
+
+    let subscriber = subscriberData
 
     if (subscriberError) {
       console.error('Database error details:', subscriberError)
