@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
                     '127.0.0.1'
 
     // Insert or update email subscriber (using public client for now)
-    const { data: subscriber, error: subscriberError } = await supabase
+    let { data: subscriber, error: subscriberError } = await supabase
       .from('email_subscribers')
       .upsert({
         email: body.email,
@@ -121,47 +121,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Email service integration (currently bypassed)
-async function sendWelcomeEmail(email: string, mbtiType?: string, superpower?: string) {
-  // 🚫 EMAIL SENDING BYPASSED - Ready for future integration
-  console.log(`📧 [BYPASSED] Welcome email for: ${email}`)
-  console.log(`📊 MBTI Type: ${mbtiType}, Superpower: ${superpower}`)
-  
-  // When ready to enable email sending, replace the above with:
-  /*
-  const { Resend } = require('resend')
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  
-  try {
-    const { data, error } = await resend.emails.send({
-      from: 'CareerPowers <noreply@careerpowers.com>',
-      to: [email],
-      subject: `🚀 Welcome to CareerPowers! Your ${superpower} Journey Begins`,
-      html: generateWelcomeEmailHTML(mbtiType, superpower),
-      text: `Congratulations on discovering your career superpower: ${superpower}! 
-             Your detailed report is attached. Welcome to the CareerPowers community!`
-    })
-    
-    if (error) {
-      console.error('Resend email error:', error)
-      throw error
-    }
-    
-    console.log('✅ Welcome email sent successfully:', data)
-    return data
-  } catch (error) {
-    console.error('❌ Failed to send welcome email:', error)
-    throw error
-  }
-  */
-  
-  // Simulate successful email sending for development
-  return Promise.resolve({ 
-    id: 'bypassed_' + Date.now(), 
-    status: 'bypassed',
-    message: 'Email sending bypassed for development' 
-  })
-}
+// Email service integration is currently bypassed
+// When ready to enable emails, implement sendWelcomeEmail function here
 
 // Handle preflight requests for CORS
 export async function OPTIONS() {
