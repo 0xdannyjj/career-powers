@@ -75,9 +75,18 @@ Assessment Responses:
 
 export async function analyzeMBTIResponses(responses: AssessmentResponse[]): Promise<MBTIAnalysisResult> {
   try {
+    // Check if API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured')
+    }
+
+    console.log('🤖 Starting OpenAI analysis...')
+    
     const formattedResponses = responses.map((response, index) => 
       `Q${index + 1}: ${response.questionText}\nAnswer: ${response.selectedOption}`
     ).join('\n\n')
+
+    console.log('📝 Formatted responses for OpenAI:', formattedResponses.substring(0, 200) + '...')
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini', // Using GPT-4o-mini as specified in PRD
@@ -92,10 +101,14 @@ export async function analyzeMBTIResponses(responses: AssessmentResponse[]): Pro
       response_format: { type: 'json_object' }
     })
 
+    console.log('✅ OpenAI API call successful')
+
     const response = completion.choices[0]?.message?.content
     if (!response) {
       throw new Error('No response from OpenAI')
     }
+
+    console.log('📊 OpenAI raw response:', response)
 
     const analysis = JSON.parse(response) as MBTIAnalysisResult
     
@@ -104,12 +117,27 @@ export async function analyzeMBTIResponses(responses: AssessmentResponse[]): Pro
       throw new Error('Invalid analysis response structure')
     }
 
+    console.log('🎯 Analysis successful:', analysis.mbtiType, analysis.superpowerTitle)
     return analysis
-  } catch (error) {
-    console.error('Error analyzing MBTI responses:', error)
     
-    // Fallback analysis if OpenAI fails
-    return getFallbackAnalysis(responses)
+  } catch (error) {
+    console.error('❌ OpenAI Analysis Error Details:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      hasApiKey: !!process.env.OPENAI_API_KEY,
+      apiKeyPrefix: process.env.OPENAI_API_KEY?.substring(0, 10) + '...',
+      stack: error instanceof Error ? error.stack : undefined
+    })
+    
+    // For now, still return fallback but with clear indication
+    console.warn('🔄 Using fallback analysis due to OpenAI failure')
+    const fallback = getFallbackAnalysis(responses)
+    
+    // Add a marker to indicate this is a fallback
+    return {
+      ...fallback,
+      explanation: `[FALLBACK] ${fallback.explanation}`,
+      funFact: `${fallback.funFact} (Note: This is a default analysis due to AI service unavailability)`
+    }
   }
 }
 
